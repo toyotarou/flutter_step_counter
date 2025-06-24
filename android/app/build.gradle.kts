@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.example.flutter_step_counter"
-    compileSdk = 34
+    compileSdk = 35
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

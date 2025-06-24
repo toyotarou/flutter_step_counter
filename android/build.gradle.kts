@@ -12,6 +12,27 @@ allprojects {
     }
 }
 
+subprojects {
+    if (name == "isar_flutter_libs") {
+        afterEvaluate {
+            plugins.withId("com.android.library") {
+                // ✅ namespace を設定
+                extensions.configure<com.android.build.gradle.LibraryExtension>("android") {
+                    namespace = "com.github.isar_flutter_libs"
+                }
+            }
+
+            // ✅ AndroidManifest.xml の package 属性を削除
+            val manifestFile = file("src/main/AndroidManifest.xml")
+            if (manifestFile.exists()) {
+                val original = manifestFile.readText()
+                val modified = original.replace("""package\s*=\s*"dev\.isar\.isar_flutter_libs"""", "")
+                manifestFile.writeText(modified)
+            }
+        }
+    }
+}
+
 val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()
 rootProject.layout.buildDirectory.value(newBuildDir)
 
