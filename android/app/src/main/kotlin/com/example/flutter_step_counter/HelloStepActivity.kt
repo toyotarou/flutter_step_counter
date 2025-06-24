@@ -42,10 +42,8 @@ class HelloStepActivity : ComponentActivity() {
         val db = AppDatabase.getDatabase(applicationContext)
         val stepDao = db.stepDao()
 
-        stepSensorManager = StepSensorManager(this) { stepCount ->
-            Log.d("HelloStepActivity", "👣 歩数: $stepCount")
-            steps.value = stepCount.toInt()
-        }
+        // ✅ 修正：コンストラクタは1引数
+        stepSensorManager = StepSensorManager(this)
 
         checkPermissionAndStartSensor()
 
@@ -55,7 +53,7 @@ class HelloStepActivity : ComponentActivity() {
             val stepValue by steps
             val countdown = remember { mutableStateOf(60) }
 
-            // カウントダウンを1秒ごとに更新
+            // ⏳ カウントダウン更新
             LaunchedEffect(Unit) {
                 while (true) {
                     delay(1000)
@@ -66,7 +64,7 @@ class HelloStepActivity : ComponentActivity() {
                 }
             }
 
-            // Roomのデータを5秒ごとに再取得
+            // 🗂 DB一覧取得
             LaunchedEffect(Unit) {
                 while (true) {
                     delay(5000)
@@ -94,19 +92,31 @@ class HelloStepActivity : ComponentActivity() {
                             val today = getToday()
                             val nowTime = StepDataManager.getCurrentTime()
                             val stepCount = steps.value
-                            val existing = stepDao.getByDate(today)
 
-                            if (existing == null) {
+                            // ✅ 修正：segment対応保存
+                            val latest = stepDao.getLatestByDate(today)
+                            if (latest == null) {
                                 stepDao.insert(
                                     StepRecord(
                                         date = today,
+                                        segment = 0,
+                                        time = nowTime,
+                                        step = stepCount
+                                    )
+                                )
+                            } else if (stepCount < latest.step) {
+                                val newSegment = latest.segment + 1
+                                stepDao.insert(
+                                    StepRecord(
+                                        date = today,
+                                        segment = newSegment,
                                         time = nowTime,
                                         step = stepCount
                                     )
                                 )
                             } else {
                                 stepDao.update(
-                                    existing.copy(
+                                    latest.copy(
                                         step = stepCount,
                                         time = nowTime
                                     )
@@ -152,7 +162,7 @@ class HelloStepActivity : ComponentActivity() {
 
                     LazyColumn(modifier = Modifier.fillMaxWidth()) {
                         items(stepListState.value) { record ->
-                            Text("📅 ${record.date} ：👣 ${record.step} 歩（🕒 ${record.time}）")
+                            Text("📅 ${record.date} (区間${record.segment})：👣 ${record.step} 歩（🕒 ${record.time}）")
                         }
                     }
                 }

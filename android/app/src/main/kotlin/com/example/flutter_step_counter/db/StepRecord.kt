@@ -6,7 +6,8 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "step_record")
 data class StepRecord(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val date: String,
-    val time: String,
-    val step: Int
+    val date: String,      // yyyy-MM-dd
+    val segment: Int,      // 0: 通常, 1以降: 再起動後
+    val time: String,      // HH:mm:ss
+    val step: Int          // センサーから取得した歩数
 )
