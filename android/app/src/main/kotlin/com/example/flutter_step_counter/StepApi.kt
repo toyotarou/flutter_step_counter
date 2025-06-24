@@ -107,6 +107,8 @@ interface StepApi {
   fun getCurrentStep(): Long
   /** 保存された歩数レコードの一覧を取得 */
   fun getAllStepRecords(): List<StepRecord>
+  /** サービスが稼働中かどうかを確認 */
+  fun isServiceRunning(): Boolean
 
   companion object {
     /** The codec used by StepApi. */
@@ -139,6 +141,22 @@ interface StepApi {
             var wrapped: List<Any?>
             try {
               wrapped = listOf<Any?>(api.getAllStepRecords())
+            } catch (exception: Throwable) {
+              wrapped = wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.flutter_step_counter.StepApi.isServiceRunning", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            var wrapped: List<Any?>
+            try {
+              wrapped = listOf<Any?>(api.isServiceRunning())
             } catch (exception: Throwable) {
               wrapped = wrapError(exception)
             }

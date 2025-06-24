@@ -6,76 +6,47 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.util.Log
-import com.example.flutter_step_counter.db.AppDatabase
-import com.example.flutter_step_counter.repository.StepRepository
 
-class StepSensorManager(
-    private val context: Context
-) : SensorEventListener {
-
-    private val TAG = "StepSensorManager"
+class StepSensorManager(private val context: Context) : SensorEventListener {
 
     private var sensorManager: SensorManager? = null
-    private var stepCounterSensor: Sensor? = null
-    private lateinit var stepRepository: StepRepository
+    private var stepSensor: Sensor? = null
+
+    companion object {
+        private var isRunning = false
+        private var currentStep: Int = 0
+
+        fun isRunning(): Boolean = isRunning
+        fun getCurrentStep(): Int = currentStep
+    }
 
     fun register() {
-        Log.d(TAG, "✅ register() called")
+        if (isRunning) return
 
-        val db = AppDatabase.getDatabase(context)
-        stepRepository = StepRepository(db.stepDao())
+        sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        stepSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
 
-        sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
-        if (sensorManager == null) {
-            Log.e(TAG, "❌ SensorManager is null")
-            return
-        }
-
-        stepCounterSensor = sensorManager!!.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
-        if (stepCounterSensor == null) {
-            Log.e(TAG, "❌ StepCounterSensor not available")
-            return
-        }
-
-        val success = sensorManager!!.registerListener(
-            this,
-            stepCounterSensor,
-            SensorManager.SENSOR_DELAY_NORMAL
-        )
-
-        Log.d(
-            TAG,
-            if (success) "✅ Step sensor registered successfully" else "❌ Failed to register step sensor"
-        )
+        stepSensor?.also { sensor ->
+            sensorManager?.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+            isRunning = true
+            Log.d("StepSensorManager", "✅ センサー登録")
+        } ?: Log.w("StepSensorManager", "⚠️ TYPE_STEP_COUNTER 未対応")
     }
 
     fun unregister() {
-        Log.d(TAG, "🛑 unregister() called")
         sensorManager?.unregisterListener(this)
-        sensorManager = null
-        stepCounterSensor = null
+        isRunning = false
+        Log.d("StepSensorManager", "🛑 センサー解除")
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
-        if (event == null) {
-            Log.w(TAG, "⚠️ onSensorChanged called with null event")
-            return
-        }
-
-        if (event.sensor.type == Sensor.TYPE_STEP_COUNTER) {
-            val steps = event.values[0]
-            Log.d(TAG, "🚶 onSensorChanged - StepCounter value: $steps")
-            try {
-                stepRepository.saveStep(steps) // Repository経由で保存
-            } catch (e: Exception) {
-                Log.e(TAG, "❌ Exception in saveStep: ${e.message}", e)
-            }
-        } else {
-            Log.w(TAG, "⚠️ Unexpected sensor type: ${event.sensor.type}")
+        if (event?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
+            currentStep = event.values[0].toInt()
+            Log.d("StepSensorManager", "👣 歩数: $currentStep")
         }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        Log.d(TAG, "📡 Sensor accuracy changed: $accuracy for sensor: ${sensor?.name}")
+        // 無視
     }
 }

@@ -9,7 +9,7 @@ import android.os.Looper
 import android.util.Log
 import com.example.flutter_step_counter.repository.StepRepository
 import com.example.flutter_step_counter.db.AppDatabase
-import com.example.flutter_step_counter.HelloStepActivity
+import com.example.flutter_step_counter.sensors.StepSensorManager
 import kotlinx.coroutines.*
 
 class StepUpdateService : Service() {
@@ -17,6 +17,7 @@ class StepUpdateService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var runnable: Runnable
     private lateinit var stepRepository: StepRepository
+    private lateinit var stepSensorManager: StepSensorManager
 
     companion object {
         var isRunning: Boolean = false
@@ -26,6 +27,9 @@ class StepUpdateService : Service() {
         super.onCreate()
         isRunning = true
         Log.d("StepUpdateService", "🚀 サービス起動")
+
+        stepSensorManager = StepSensorManager(this)
+        stepSensorManager.register()
 
         val db = AppDatabase.getDatabase(applicationContext)
         stepRepository = StepRepository(db.stepDao())
@@ -37,7 +41,7 @@ class StepUpdateService : Service() {
     private fun startRepeatingTask() {
         runnable = object : Runnable {
             override fun run() {
-                val step = HelloStepActivity.steps.value
+                val step = StepSensorManager.getCurrentStep()
 
                 Log.d("StepUpdateService", "💾 saveStep called from Service: $step")
                 stepRepository.saveStep(step.toFloat())
@@ -54,8 +58,11 @@ class StepUpdateService : Service() {
         val channelName = "Step Update Service"
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            val chan =
-                NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
+            val chan = NotificationChannel(
+                channelId,
+                channelName,
+                NotificationManager.IMPORTANCE_LOW
+            )
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(chan)
         }
@@ -73,6 +80,7 @@ class StepUpdateService : Service() {
         super.onDestroy()
         isRunning = false
         handler.removeCallbacks(runnable)
+        stepSensorManager.unregister()
         Log.d("StepUpdateService", "🛑 サービス停止")
     }
 

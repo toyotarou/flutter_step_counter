@@ -1,32 +1,43 @@
 package com.example.flutter_step_counter
 
 import android.content.Context
-import com.example.flutter_step_counter.StepApi
-import com.example.flutter_step_counter.StepRecord as PigeonStepRecord
 import com.example.flutter_step_counter.db.AppDatabase
-import com.example.flutter_step_counter.db.StepRecord as DbStepRecord
+import com.example.flutter_step_counter.sensors.StepSensorManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import com.example.flutter_step_counter.db.StepRecord as DbStepRecord
 
 class StepApiImpl(private val context: Context) : StepApi {
-    override fun getCurrentStep(): Long {
-        return 0L
+
+    override fun getAllStepRecords(): List<StepRecord> = runBlocking {
+        return@runBlocking withContext(Dispatchers.IO) {
+            val db = AppDatabase.getDatabase(context)
+            val dao = db.stepDao()
+            val dbRecords: List<DbStepRecord> = dao.getAll()
+
+            val pigeonRecords: List<StepRecord> = dbRecords.map {
+                StepRecord(
+
+
+                    date = it.date,
+                    segment = it.segment.toLong(),
+                    time = it.time,
+                    step = it.step.toLong()
+
+
+                )
+            }
+
+            pigeonRecords
+        }
     }
 
-    override fun getAllStepRecords(): List<PigeonStepRecord> = runBlocking {
-        val dbRecords = withContext(Dispatchers.IO) {
-            val stepDao = AppDatabase.getDatabase(context).stepDao()
-            stepDao.getAll()
-        }
+    override fun isServiceRunning(): Boolean {
+        return StepSensorManager.isRunning()
+    }
 
-        dbRecords.map {
-            PigeonStepRecord(
-                date = it.date,
-                segment = it.segment.toLong(),
-                time = it.time,
-                step = it.step.toLong()
-            )
-        }
+    override fun getCurrentStep(): Long {
+        return StepSensorManager.getCurrentStep().toLong()
     }
 }

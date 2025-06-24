@@ -16,4 +16,7 @@ abstract class StepApi {
 
   /// 保存された歩数レコードの一覧を取得
   List<StepRecord> getAllStepRecords();
+
+  /// サービスが稼働中かどうかを確認
+  bool isServiceRunning();
 }
