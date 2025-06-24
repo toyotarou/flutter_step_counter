@@ -3,7 +3,6 @@ import 'package:pigeon/pigeon.dart';
 /// 歩数レコードモデル（KotlinのStepRecordに相当）
 class StepRecord {
   late String date;
-  late int segment;
   late String time;
   late int step;
 }

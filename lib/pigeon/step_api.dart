@@ -19,14 +19,11 @@ PlatformException _createConnectionError(String channelName) {
 class StepRecord {
   StepRecord({
     required this.date,
-    required this.segment,
     required this.time,
     required this.step,
   });
 
   String date;
-
-  int segment;
 
   String time;
 
@@ -35,7 +32,6 @@ class StepRecord {
   Object encode() {
     return <Object?>[
       date,
-      segment,
       time,
       step,
     ];
@@ -45,9 +41,8 @@ class StepRecord {
     result as List<Object?>;
     return StepRecord(
       date: result[0]! as String,
-      segment: result[1]! as int,
-      time: result[2]! as String,
-      step: result[3]! as int,
+      time: result[1]! as String,
+      step: result[2]! as int,
     );
   }
 }

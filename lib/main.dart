@@ -64,6 +64,8 @@ class _StepAppState extends State<StepApp> {
         _isRunning = running;
         _records = records;
       });
+
+      print("📥 records count: ${_records.length}");
     } catch (e, stack) {
       debugPrint('❌ _loadData 失敗: $e');
       debugPrint(stack.toString());
@@ -113,7 +115,7 @@ class _StepAppState extends State<StepApp> {
                           if (r == null) return const SizedBox.shrink();
                           return ListTile(
                             leading: const Icon(Icons.directions_walk),
-                            title: Text("${r.date}（区間${r.segment}）"),
+                            title: Text(r.date),
                             subtitle: Text("歩数: ${r.step}｜時間: ${r.time}"),
                           );
                         },

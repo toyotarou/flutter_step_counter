@@ -18,14 +18,9 @@ class StepApiImpl(private val context: Context) : StepApi {
 
             val pigeonRecords: List<StepRecord> = dbRecords.map {
                 StepRecord(
-
-
                     date = it.date,
-                    segment = it.segment.toLong(),
                     time = it.time,
                     step = it.step.toLong()
-
-
                 )
             }
 

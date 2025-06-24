@@ -50,7 +50,6 @@ class FlutterError (
  */
 data class StepRecord (
   val date: String,
-  val segment: Long,
   val time: String,
   val step: Long
 
@@ -59,16 +58,14 @@ data class StepRecord (
     @Suppress("UNCHECKED_CAST")
     fun fromList(list: List<Any?>): StepRecord {
       val date = list[0] as String
-      val segment = list[1].let { if (it is Int) it.toLong() else it as Long }
-      val time = list[2] as String
-      val step = list[3].let { if (it is Int) it.toLong() else it as Long }
-      return StepRecord(date, segment, time, step)
+      val time = list[1] as String
+      val step = list[2].let { if (it is Int) it.toLong() else it as Long }
+      return StepRecord(date, time, step)
     }
   }
   fun toList(): List<Any?> {
     return listOf<Any?>(
       date,
-      segment,
       time,
       step,
     )
