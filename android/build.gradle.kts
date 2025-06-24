@@ -1,3 +1,10 @@
+plugins {
+    id("com.android.application") version "8.6.0" apply false
+    id("org.jetbrains.kotlin.android") version "1.9.22" apply false // ← 修正ポイント
+    id("com.google.devtools.ksp") version "1.9.22-1.0.18" apply false // Kotlinと合わせるのが安全
+    id("com.google.dagger.hilt.android") version "2.51.1" apply false
+}
+
 allprojects {
     repositories {
         google()
